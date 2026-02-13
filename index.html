@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Text to Speech</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">
+            <i class="fas fa-volume-up"></i>
+            Text to Speech Converter
+        </h1>
+        
+        <div class="card">
+            <textarea id="textInput" placeholder="Type or paste your text here..." autofocus></textarea>
+            
+            <div class="controls">
+                <div class="voice-settings">
+                    <div class="setting-group">
+                        <label for="voiceSelect">
+                            <i class="fas fa-microphone"></i> Voice:
+                        </label>
+                        <select id="voiceSelect"></select>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="rate">
+                            <i class="fas fa-tachometer-alt"></i> Speed:
+                        </label>
+                        <input type="range" id="rate" min="0.5" max="2" step="0.1" value="1">
+                        <span id="rateValue">1.0x</span>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="pitch">
+                            <i class="fas fa-chart-line"></i> Pitch:
+                        </label>
+                        <input type="range" id="pitch" min="0" max="2" step="0.1" value="1">
+                        <span id="pitchValue">1.0</span>
+                    </div>
+                    
+                    <div class="setting-group">
+                        <label for="volume">
+                            <i class="fas fa-volume-up"></i> Volume:
+                        </label>
+                        <input type="range" id="volume" min="0" max="1" step="0.1" value="1">
+                        <span id="volumeValue">100%</span>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button id="speakBtn" class="btn primary">
+                        <i class="fas fa-play"></i> Speak
+                    </button>
+                    <button id="pauseBtn" class="btn warning" disabled>
+                        <i class="fas fa-pause"></i> Pause
+                    </button>
+                    <button id="resumeBtn" class="btn success" disabled>
+                        <i class="fas fa-play-circle"></i> Resume
+                    </button>
+                    <button id="stopBtn" class="btn danger" disabled>
+                        <i class="fas fa-stop"></i> Stop
+                    </button>
+                </div>
+            </div>
+            
+            <div class="file-actions">
+                <button id="fileUploadBtn" class="btn secondary">
+                    <i class="fas fa-upload"></i> Upload Text File
+                </button>
+                <input type="file" id="fileInput" accept=".txt" style="display: none;">
+                <button id="clearBtn" class="btn secondary">
+                    <i class="fas fa-trash"></i> Clear
+                </button>
+                <button id="copyBtn" class="btn secondary">
+                    <i class="fas fa-copy"></i> Copy Text
+                </button>
+            </div>
+            
+            <div class="status-bar">
+                <span id="charCount">0 characters</span>
+                <span id="wordCount">0 words</span>
+                <span id="speechStatus">Ready</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const textInput = document.getElementById('textInput');
+        const voiceSelect = document.getElementById('voiceSelect');
+        const rate = document.getElementById('rate');
+        const pitch = document.getElementById('pitch');
+        const volume = document.getElementById('volume');
+        const rateValue = document.getElementById('rateValue');
+        const pitchValue = document.getElementById('pitchValue');
+        const volumeValue = document.getElementById('volumeValue');
+        const speakBtn = document.getElementById('speakBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resumeBtn = document.getElementById('resumeBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const fileUploadBtn = document.getElementById('fileUploadBtn');
+        const fileInput = document.getElementById('fileInput');
+        const clearBtn = document.getElementById('clearBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const charCount = document.getElementById('charCount');
+        const wordCount = document.getElementById('wordCount');
+        const speechStatus = document.getElementById('speechStatus');
+
+        let voices = [];
+        let currentUtterance = null;
+
+        // Initialize voices
+        function loadVoices() {
+            voices = speechSynthesis.getVoices();
+            voiceSelect.innerHTML = '';
+            voices.forEach((voice, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `${voice.name} (${voice.lang})`;
+                if (voice.default) {
+                    option.textContent += ' [Default]';
+                }
+                voiceSelect.appendChild(option);
+            });
+        }
+
+        loadVoices();
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = loadVoices;
+        }
+
+        // Update counter
+        function updateCounters() {
+            const text = textInput.value;
+            charCount.textContent = `${text.length} characters`;
+            const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+            wordCount.textContent = `${words} words`;
+        }
+
+        textInput.addEventListener('input', updateCounters);
+
+        // Update range values
+        rate.addEventListener('input', () => {
+            rateValue.textContent = rate.value + 'x';
+        });
+
+        pitch.addEventListener('input', () => {
+            pitchValue.textContent = pitch.value;
+        });
+
+        volume.addEventListener('input', () => {
+            volumeValue.textContent = Math.round(volume.value * 100) + '%';
+        });
+
+        // Speak function
+        function speak() {
+            if (textInput.value.trim() === '') {
+                alert('Please enter some text to speak');
+                return;
+            }
+
+            // Cancel any ongoing speech
+            speechSynthesis.cancel();
+
+            currentUtterance = new SpeechSynthesisUtterance(textInput.value);
+            currentUtterance.voice = voices[voiceSelect.value];
+            currentUtterance.rate = parseFloat(rate.value);
+            currentUtterance.pitch = parseFloat(pitch.value);
+            currentUtterance.volume = parseFloat(volume.value);
+
+            // Event handlers
+            currentUtterance.onstart = () => {
+                speechStatus.textContent = 'Speaking...';
+                speakBtn.disabled = true;
+                pauseBtn.disabled = false;
+                stopBtn.disabled = false;
+                resumeBtn.disabled = true;
+            };
+
+            currentUtterance.onpause = () => {
+                speechStatus.textContent = 'Paused';
+                pauseBtn.disabled = true;
+                resumeBtn.disabled = false;
+            };
+
+            currentUtterance.onresume = () => {
+                speechStatus.textContent = 'Speaking...';
+                pauseBtn.disabled = false;
+                resumeBtn.disabled = true;
+            };
+
+            currentUtterance.onend = () => {
+                speechStatus.textContent = 'Finished';
+                resetButtons();
+            };
+
+            currentUtterance.onerror = () => {
+                speechStatus.textContent = 'Error occurred';
+                resetButtons();
+            };
+
+            speechSynthesis.speak(currentUtterance);
+        }
+
+        function resetButtons() {
+            speakBtn.disabled = false;
+            pauseBtn.disabled = true;
+            resumeBtn.disabled = true;
+            stopBtn.disabled = true;
+        }
+
+        // Event listeners for buttons
+        speakBtn.addEventListener('click', speak);
+        
+        pauseBtn.addEventListener('click', () => {
+            speechSynthesis.pause();
+        });
+
+        resumeBtn.addEventListener('click', () => {
+            speechSynthesis.resume();
+        });
+
+        stopBtn.addEventListener('click', () => {
+            speechSynthesis.cancel();
+            speechStatus.textContent = 'Stopped';
+            resetButtons();
+        });
+
+        // File upload
+        fileUploadBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    textInput.value = e.target.result;
+                    updateCounters();
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        // Clear text
+        clearBtn.addEventListener('click', () => {
+            textInput.value = '';
+            updateCounters();
+            textInput.focus();
+        });
+
+        // Copy text
+        copyBtn.addEventListener('click', () => {
+            textInput.select();
+            document.execCommand('copy');
+            alert('Text copied to clipboard!');
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Ctrl+Enter to speak
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                speak();
+            }
+            // Escape to stop
+            if (e.key === 'Escape') {
+                speechSynthesis.cancel();
+                speechStatus.textContent = 'Stopped';
+                resetButtons();
+            }
+        });
+
+        // Initial counter update
+        updateCounters();
+    </script>
+</body>
+</html>
