@@ -11,19 +11,20 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 20px;
+    padding: 10px;
 }
 
 .container {
     width: 100%;
-    max-width: 800px;
+    max-width: 900px;
+    margin: 0 auto;
 }
 
 .title {
     color: white;
     text-align: center;
-    margin-bottom: 30px;
-    font-size: 2rem;
+    margin-bottom: 20px;
+    font-size: clamp(1.5rem, 5vw, 2rem);
 }
 
 .title i {
@@ -35,15 +36,15 @@ body {
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
     border-radius: 15px;
-    padding: 25px;
+    padding: clamp(15px, 4vw, 25px);
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 #textInput {
     width: 100%;
-    height: 150px;
-    padding: 15px;
-    font-size: 16px;
+    height: clamp(120px, 25vh, 200px);
+    padding: clamp(10px, 3vw, 15px);
+    font-size: clamp(14px, 4vw, 16px);
     border: none;
     border-radius: 8px;
     background: rgba(255, 255, 255, 0.95);
@@ -66,14 +67,14 @@ body {
 .controls {
     background: rgba(0, 0, 0, 0.3);
     border-radius: 10px;
-    padding: 20px;
+    padding: clamp(15px, 4vw, 20px);
     margin-bottom: 20px;
 }
 
 .voice-settings {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+    gap: clamp(10px, 3vw, 15px);
     margin-bottom: 20px;
 }
 
@@ -81,47 +82,53 @@ body {
     display: flex;
     flex-direction: column;
     gap: 5px;
+    min-width: 0; /* Prevents overflow */
 }
 
 .setting-group label {
     color: white;
-    font-size: 14px;
+    font-size: clamp(12px, 3.5vw, 14px);
     display: flex;
     align-items: center;
     gap: 5px;
+    flex-wrap: wrap;
 }
 
 .setting-group label i {
     color: #00aff0;
+    font-size: clamp(12px, 3.5vw, 14px);
 }
 
 select, input[type="range"] {
+    width: 100%;
     padding: 8px;
     border-radius: 5px;
     border: none;
     background: rgba(255, 255, 255, 0.9);
-    font-size: 14px;
+    font-size: clamp(12px, 3.5vw, 14px);
 }
 
 select {
     cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .setting-group span {
     color: #00aff0;
-    font-size: 14px;
+    font-size: clamp(12px, 3.5vw, 14px);
     text-align: right;
 }
 
 .action-buttons {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
+    gap: clamp(5px, 2vw, 10px);
 }
 
 .btn {
-    padding: 10px;
-    font-size: 14px;
+    padding: clamp(8px, 2vw, 10px);
+    font-size: clamp(11px, 3vw, 14px);
     font-weight: bold;
     color: white;
     border: none;
@@ -129,15 +136,31 @@ select {
     cursor: pointer;
     transition: all 0.3s ease;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.5px;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 5px;
+    white-space: nowrap;
 }
 
 .btn i {
-    font-size: 16px;
+    font-size: clamp(12px, 3.5vw, 16px);
+}
+
+/* Hide text on very small screens, show only icons */
+@media (max-width: 480px) {
+    .btn span {
+        display: none;
+    }
+    
+    .btn i {
+        font-size: 18px;
+    }
+    
+    .btn {
+        padding: 10px;
+    }
 }
 
 .btn.primary {
@@ -177,40 +200,68 @@ select {
 .file-actions {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 10px;
+    gap: clamp(5px, 2vw, 10px);
     margin-bottom: 20px;
 }
 
 .status-bar {
     display: flex;
     justify-content: space-between;
-    padding: 10px;
+    padding: clamp(8px, 2vw, 10px);
     background: rgba(0, 0, 0, 0.3);
     border-radius: 8px;
     color: white;
-    font-size: 14px;
+    font-size: clamp(11px, 3vw, 14px);
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 #charCount, #wordCount, #speechStatus {
     color: #00aff0;
 }
 
-/* Responsive design */
+/* Responsive breakpoints */
+
+/* Tablets and small desktops */
 @media (max-width: 768px) {
     .container {
-        padding: 10px;
-    }
-    
-    .title {
-        font-size: 1.5rem;
-    }
-    
-    .card {
-        padding: 15px;
+        max-width: 100%;
     }
     
     .voice-settings {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .action-buttons {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .file-actions {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Large phones */
+@media (max-width: 600px) {
+    .voice-settings {
         grid-template-columns: 1fr;
+    }
+    
+    .status-bar {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+}
+
+/* Small phones */
+@media (max-width: 480px) {
+    body {
+        padding: 5px;
+    }
+    
+    .card {
+        padding: 12px;
     }
     
     .action-buttons {
@@ -221,20 +272,76 @@ select {
         grid-template-columns: 1fr;
     }
     
-    .status-bar {
-        flex-direction: column;
-        gap: 5px;
+    .setting-group {
         text-align: center;
     }
     
-    #textInput {
-        height: 120px;
+    .setting-group label {
+        justify-content: center;
+    }
+    
+    select {
+        text-align: center;
     }
 }
 
-/* Custom range input styling */
+/* Very small phones */
+@media (max-width: 320px) {
+    .action-buttons {
+        grid-template-columns: 1fr;
+    }
+    
+    .title {
+        font-size: 1.3rem;
+    }
+    
+    #textInput {
+        height: 100px;
+    }
+}
+
+/* Landscape mode for phones */
+@media (max-height: 600px) and (orientation: landscape) {
+    body {
+        padding: 5px;
+    }
+    
+    .container {
+        max-width: 800px;
+    }
+    
+    #textInput {
+        height: 80px;
+    }
+    
+    .voice-settings {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .action-buttons {
+        grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .file-actions {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Tablets in landscape */
+@media (min-width: 1024px) and (max-height: 768px) {
+    .container {
+        max-width: 1000px;
+    }
+    
+    #textInput {
+        height: 150px;
+    }
+}
+
+/* Custom range input styling - works on all devices */
 input[type="range"] {
     -webkit-appearance: none;
+    appearance: none;
     width: 100%;
     height: 5px;
     background: linear-gradient(to right, #00aff0, #f0a500);
@@ -245,6 +352,7 @@ input[type="range"] {
 
 input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
+    appearance: none;
     width: 18px;
     height: 18px;
     background: white;
@@ -270,4 +378,34 @@ input[type="range"]::-moz-range-thumb {
 
 input[type="range"]::-moz-range-thumb:hover {
     transform: scale(1.2);
+}
+
+/* Touch-friendly improvements for mobile */
+@media (hover: none) and (pointer: coarse) {
+    .btn {
+        padding: 12px 8px; /* Larger touch target */
+    }
+    
+    select, input[type="range"] {
+        min-height: 44px; /* Better touch target */
+    }
+    
+    .btn i {
+        font-size: 20px; /* Larger icons for touch */
+    }
+}
+
+/* High-resolution screens */
+@media (min-width: 1440px) {
+    .container {
+        max-width: 1100px;
+    }
+    
+    #textInput {
+        font-size: 18px;
+    }
+    
+    .btn {
+        font-size: 16px;
+    }
 }
